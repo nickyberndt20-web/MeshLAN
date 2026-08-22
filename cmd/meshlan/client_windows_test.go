@@ -115,7 +115,7 @@ func TestNativeDesktopProvidesTrayAndCloseToTray(t *testing.T) {
 }
 
 func TestBuildProducesPortableNativeWindowsBinary(t *testing.T) {
-	build, err := os.ReadFile("build.ps1")
+	build, err := os.ReadFile(filepath.Join("..", "..", "build.ps1"))
 	if err != nil {
 		t.Fatal(err)
 	}

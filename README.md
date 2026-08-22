@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/meshlan-icon.png" width="96" alt="MeshLAN logo">
+  <img src="cmd/meshlan/assets/meshlan-icon.png" width="96" alt="MeshLAN logo">
   <h1>MeshLAN</h1>
   <p><strong>以 P2P 为主、Relay 兜底的自托管虚拟局域网与本地服务协作平台</strong></p>
   <p>
@@ -189,18 +189,19 @@ flowchart LR
 
 ```text
 .
-├── admin/                     # Linux 主服务端管理台
-├── assets/                    # 图标与 Windows manifest
-├── deploy/                    # Linux 子节点安装/升级和 systemd 配置
+├── cmd/meshlan/               # MeshLAN 可执行程序源码
+│   ├── admin/                 # Linux 主服务端管理台
+│   ├── assets/                # 图标与 Windows manifest
+│   ├── deploy/                # Linux 子节点安装/升级和 systemd 配置
+│   ├── web/                   # Windows 客户端 UI
+│   ├── *_windows.go           # Windows 客户端与系统集成
+│   ├── server.go              # 主服务端和管理 API
+│   ├── node_agent.go          # Linux 子节点
+│   ├── multinode.go           # 多 Lighthouse/Relay 管理
+│   ├── ai_*.go                # AI 加密、流式调用、会话和工具执行
+│   └── history.go             # SQLite 历史与采样
 ├── docs/                      # 文档与脱敏截图
 ├── tools/                     # 诊断脚本
-├── web/                       # Windows 客户端 UI
-├── *_windows.go               # Windows 客户端、路由、更新、映射与桌面集成
-├── server.go                  # 主服务端和管理 API
-├── node_agent.go              # Linux 子节点
-├── multinode.go               # 多 Lighthouse/Relay 管理
-├── ai_*.go                    # AI 加密、流式调用、会话和工具执行
-├── history.go                 # SQLite 历史与采样
 ├── build.ps1                  # 测试与跨平台构建
 └── VERSION
 ```
@@ -276,7 +277,7 @@ sudo /usr/local/bin/meshlan-nebula server serve \
 
 生产环境应使用反向代理、有效域名证书、最小化防火墙、专用 systemd 用户、
 `LoadCredential` 和离线备份。示例 credential drop-in 位于
-`deploy/systemd/20-credentials.conf`。
+`cmd/meshlan/deploy/systemd/20-credentials.conf`。
 
 ### 运行 Windows 客户端
 

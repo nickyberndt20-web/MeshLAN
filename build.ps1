@@ -27,7 +27,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Go vet failed' }
 
 $env:CGO_ENABLED = '0'
 $env:GOOS = 'windows'; $env:GOARCH = 'amd64'
-go build -trimpath -ldflags $clientLinkerFlags -o 'dist\MeshLAN-Nebula-Windows.exe' .
+go build -trimpath -ldflags $clientLinkerFlags -o 'dist\MeshLAN-Nebula-Windows.exe' .\cmd\meshlan
 if ($LASTEXITCODE -ne 0) { throw 'Windows client build failed' }
 if ($CodeSigningThumbprint) {
     $normalizedThumbprint = ($CodeSigningThumbprint -replace '\s','').ToUpperInvariant()
@@ -53,14 +53,14 @@ if ($CodeSigningThumbprint) {
 }
 Copy-Item -Force 'dist\MeshLAN-Nebula-Windows.exe' "dist\MeshLAN-Nebula-Windows-$Version.exe"
 $env:GOOS = 'linux'; $env:GOARCH = 'arm64'
-go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-arm64' .
+go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-arm64' .\cmd\meshlan
 if ($LASTEXITCODE -ne 0) { throw 'Linux server build failed' }
 $env:GOARCH = 'amd64'
-go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-amd64' .
+go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-amd64' .\cmd\meshlan
 if ($LASTEXITCODE -ne 0) { throw 'Linux amd64 server build failed' }
 Copy-Item -Force 'dist\meshlan-nebula-server-linux-arm64' 'dist\meshlan-nebula-node-linux-arm64'
 Copy-Item -Force 'dist\meshlan-nebula-server-linux-amd64' 'dist\meshlan-nebula-node-linux-amd64'
-Copy-Item -Force 'deploy\install-mesh-node.sh' 'dist\install-mesh-node.sh'
+Copy-Item -Force 'cmd\meshlan\deploy\install-mesh-node.sh' 'dist\install-mesh-node.sh'
 
 $versionedClient = "dist\MeshLAN-Nebula-Windows-$Version.exe"
 $hashes = Get-FileHash -Algorithm SHA256 'dist\meshlan-nebula-server-linux-amd64','dist\meshlan-nebula-server-linux-arm64','dist\meshlan-nebula-node-linux-amd64','dist\meshlan-nebula-node-linux-arm64','dist\install-mesh-node.sh','dist\MeshLAN-Nebula-Windows.exe',$versionedClient
