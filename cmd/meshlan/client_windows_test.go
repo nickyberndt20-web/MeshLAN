@@ -867,6 +867,37 @@ func TestClientInterfaceSupportsPersistentFourLanguageSwitching(t *testing.T) {
 	}
 }
 
+func TestTrafficRoutingLivesInDocumentedCollapsedAdvancedSettings(t *testing.T) {
+	indexHTML, err := clientWeb.ReadFile("web/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	advanced, err := clientWeb.ReadFile("web/advanced-settings.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(indexHTML), "/assets/advanced-settings.js") {
+		t.Fatal("advanced settings runtime is not loaded by the native client")
+	}
+	source := string(advanced)
+	for _, expected := range []string{
+		"advancedSettingsPanel", "advancedSettingsContent", "class=\"body hidden\"", "大多数用户不需要修改这里",
+		"它不是按用户、服务或端口分流", "P2P 出口网卡", "业务优先网卡", "Windows 普通流量的默认网卡优先级",
+		"代理或 TUN", "错误选择可能造成普通上网异常", "resetInterfaceRoutingButton", "{p2p: 'auto', business: 'auto'}",
+	} {
+		if !strings.Contains(source, expected) {
+			t.Fatalf("advanced routing documentation or behavior missing %q", expected)
+		}
+	}
+	routes, err := os.ReadFile("client_windows.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(routes), "GET /assets/advanced-settings.js") {
+		t.Fatal("advanced settings asset is not served by the native client")
+	}
+}
+
 func TestNetworkAutomationDefaultsAndQualityScore(t *testing.T) {
 	state := ClientState{}
 	if !applyNetworkAutomationDefaults(&state) || !state.AutoDualStack || !state.AutoNetworkScenes || state.NetworkAutomationVersion != networkAutomationVersion {
