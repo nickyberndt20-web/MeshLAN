@@ -1,7 +1,7 @@
 <div align="center">
-  <p><a href="README.md">简体中文</a> · <a href="README.en.md">English</a> · <strong>日本語</strong></p>
   <img src="cmd/meshlan/assets/meshlan-icon.png" width="96" alt="MeshLAN logo">
   <h1>MeshLAN</h1>
+  <p><a href="README.md">简体中文</a> · <a href="README.en.md">English</a> · <strong>日本語</strong></p>
   <p><strong>P2P を優先し、Relay をフォールバックに使うセルフホスト型仮想 LAN／ローカルサービス共有基盤</strong></p>
   <p>
     <img alt="Go" src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white">

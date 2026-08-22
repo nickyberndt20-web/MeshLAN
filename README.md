@@ -1,7 +1,7 @@
 <div align="center">
-  <p><strong>简体中文</strong> · <a href="README.en.md">English</a> · <a href="README.ja.md">日本語</a></p>
   <img src="cmd/meshlan/assets/meshlan-icon.png" width="96" alt="MeshLAN logo">
   <h1>MeshLAN</h1>
+  <p><strong>简体中文</strong> · <a href="README.en.md">English</a> · <a href="README.ja.md">日本語</a></p>
   <p><strong>以 P2P 为主、Relay 兜底的自托管虚拟局域网与本地服务协作平台</strong></p>
   <p>
     <img alt="Go" src="https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white">
