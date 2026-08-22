@@ -1,0 +1,63 @@
+#topologyPage .panel{overflow:visible}
+#topologyPage .topology-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+#topologyPage .topology-stat{min-height:68px;border:1px solid #dfe4e6;border-radius:7px;background:#fff;padding:10px 12px;box-shadow:0 1px 2px rgba(25,35,42,.025)}
+#topologyPage .topology-stat span{font-size:10px;letter-spacing:.04em;color:#7a858d;text-transform:uppercase}
+#topologyPage .topology-stat strong{margin-top:3px;font-size:14px;line-height:1.35;color:#1f2b31}
+#topologyPage .topology-toolbar{margin:0 0 9px;padding:7px 9px;border:1px solid #dde3e5;border-radius:7px;background:#f8faf9}
+#topologyPage .topology-toolbar button{min-width:42px;height:32px;padding:5px 10px;border-color:#ced6da;background:#fff;font-size:12px}
+#topologyPage .topology-toolbar button:hover{border-color:#6e958b;background:#f3f8f6}
+#topologyPage .topology-canvas{min-height:640px;border:1px solid #d5dddf;border-radius:9px;background-color:#f7f9f9;background-image:linear-gradient(rgba(52,71,80,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(52,71,80,.035) 1px,transparent 1px);background-size:24px 24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8);overflow:hidden}
+#topologyPage .topology-canvas svg{min-height:640px}
+#topologyPage .topology-zone{fill:rgba(255,255,255,.46);stroke:#dfe5e7;stroke-width:1;stroke-dasharray:4 5}
+#topologyPage .topology-zone.core{fill:rgba(225,240,235,.34);stroke:#c8ddd7}
+#topologyPage .topology-zone.devices{fill:rgba(238,243,246,.42)}
+#topologyPage .topology-zone.services{fill:rgba(239,246,243,.42);stroke:#d4e3df}
+#topologyPage .topology-zone-title{font:600 13px "Segoe UI","Microsoft YaHei",sans-serif;fill:#7b878e;letter-spacing:.08em}
+#topologyPage .topology-node rect.topology-card{fill:#fff;stroke:#b9c3c8;stroke-width:1.4;filter:drop-shadow(0 3px 5px rgba(26,39,46,.09));transition:stroke .15s ease,filter .15s ease,transform .15s ease}
+#topologyPage .topology-node:hover rect.topology-card,#topologyPage .topology-node.selected rect.topology-card{stroke:#1f7664;stroke-width:2.2;filter:drop-shadow(0 5px 8px rgba(30,78,67,.16))}
+#topologyPage .topology-node.local rect.topology-card{fill:#edf6f3;stroke:#287663;stroke-width:2.2}
+#topologyPage .topology-node.interface rect.topology-card{fill:#fffaf0;stroke:#b79958}
+#topologyPage .topology-node.lighthouse rect.topology-card{fill:#f3f6fa;stroke:#718095}
+#topologyPage .topology-node.peer-relay rect.topology-card{fill:#fff8eb;stroke:#c58a2e}
+#topologyPage .topology-node.peer-down rect.topology-card,#topologyPage .topology-node.service-down rect.topology-card{fill:#fff5f4;stroke:#bc5b60}
+#topologyPage .topology-node.service rect.topology-card{fill:#f3faf7;stroke:#619487}
+#topologyPage .topology-node.service-paused rect.topology-card{fill:#fff8eb;stroke:#b78435}
+#topologyPage .topology-node-icon{fill:#e8efed;stroke:none}
+#topologyPage .topology-node.local .topology-node-icon{fill:#d1e8e1}
+#topologyPage .topology-node.peer-relay .topology-node-icon{fill:#f5dfb9}
+#topologyPage .topology-node.peer-down .topology-node-icon{fill:#f2d6d8}
+#topologyPage .topology-node-icon-text{font:700 13px "Segoe UI",sans-serif;fill:#3d555d;text-anchor:middle;dominant-baseline:middle}
+#topologyPage .topology-label{font:650 17px "Segoe UI","Microsoft YaHei",sans-serif;fill:#1e2b31}
+#topologyPage .topology-sub{font:12.5px Consolas,"Microsoft YaHei",sans-serif;fill:#647179}
+#topologyPage .topology-badge{fill:#eef2f3;stroke:none}
+#topologyPage .topology-badge-text{font:650 10px "Segoe UI","Microsoft YaHei",sans-serif;fill:#59676e;text-anchor:middle}
+#topologyPage .topology-node.peer-relay .topology-badge{fill:#f4dfb8}
+#topologyPage .topology-node.peer-relay .topology-badge-text{fill:#855a17}
+#topologyPage .topology-node.peer-down .topology-badge{fill:#f2d6d8}
+#topologyPage .topology-node.peer-down .topology-badge-text{fill:#9b3d43}
+#topologyPage .topology-node.local .topology-badge{fill:#d1e8e1}
+#topologyPage .topology-node.local .topology-badge-text{fill:#1e6b58}
+#topologyPage .topology-edge{fill:none;stroke-width:2.5;stroke-linecap:round;opacity:.88}
+#topologyPage .topology-edge.p2p{stroke:#238365}
+#topologyPage .topology-edge.relay{stroke:#c48422;stroke-dasharray:7 5}
+#topologyPage .topology-edge.down{stroke:#b94c52;stroke-dasharray:4 5;opacity:.7}
+#topologyPage .topology-edge.control{stroke:#718095;stroke-width:2;stroke-dasharray:3 5}
+#topologyPage .topology-edge.business{stroke:#9b7b39}
+#topologyPage .topology-edge.service{stroke:#568e80;stroke-width:2;stroke-dasharray:2 4}
+#topologyPage .topology-edge.active-flow{filter:drop-shadow(0 0 2px rgba(35,131,101,.25));opacity:1}
+#topologyPage .topology-edge-pill{fill:rgba(255,255,255,.96);stroke:#dbe1e3;stroke-width:1}
+#topologyPage .topology-edge-label{font:600 11.5px "Segoe UI","Microsoft YaHei",sans-serif;fill:#4a5960}
+#topologyPage .topology-transfer-label{font:600 10px Consolas,"Microsoft YaHei",sans-serif;fill:#627077}
+#topologyPage .traffic-dot{r:3.8}
+#topologyPage .topology-legend{gap:9px;margin:10px 0 14px}
+#topologyPage .topology-legend>span{display:inline-flex;align-items:center;min-height:26px;padding:3px 8px;border:1px solid #e0e5e7;border-radius:13px;background:#fafbfb;font-size:11px;color:#657179}
+#topologyPage .topology-legend>span:last-child{border:0;background:transparent;padding-left:2px}
+#topologyPage .legend-line{width:20px;margin-right:5px}
+#topologyPage .topology-details{gap:10px}
+#topologyPage .topology-detail{min-height:128px;border:1px solid #dce2e4;border-radius:8px;padding:12px;background:#fff;box-shadow:0 1px 2px rgba(25,35,42,.025)}
+#topologyPage .topology-detail h3{margin-bottom:8px;color:#34434a}
+#topologyPage .topology-detail pre{min-height:78px;margin:0;border:1px solid #e3e7e9;border-radius:6px;background:#f7f9f9;color:#34434a;padding:10px;font:11px/1.55 Consolas,"Microsoft YaHei",sans-serif}
+#topologyPage .topology-section{margin-top:14px;padding-top:2px}
+#topologyPage .topology-section h3{color:#34434a}
+@media(max-width:980px){#topologyPage .topology-summary{grid-template-columns:repeat(2,minmax(0,1fr))}#topologyPage .topology-canvas,#topologyPage .topology-canvas svg{min-height:600px}}
+@media(max-width:760px){#topologyPage .topology-toolbar>div{grid-template-columns:repeat(4,1fr)}#topologyPage .topology-canvas svg{width:900px;min-width:900px}#topologyPage .topology-legend>span:last-child{display:none}}
