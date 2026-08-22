@@ -43,6 +43,24 @@ func TestAtlasFallbackRequestOmitsUnsupportedParameters(t *testing.T) {
 	}
 }
 
+func TestAISystemPromptFollowsClientInterfaceLanguage(t *testing.T) {
+	tests := map[string]string{
+		"zh-CN": "简体中文",
+		"zh-TW": "繁體中文",
+		"en":    "in English",
+		"ja":    "すべて日本語",
+	}
+	for language, expected := range tests {
+		prompt := aiSystemPrompt(language)
+		if !strings.Contains(prompt, expected) {
+			t.Fatalf("AI prompt for %s does not require the selected language: %s", language, prompt)
+		}
+	}
+	if normalizeAIResponseLanguage("unsupported") != "zh-CN" {
+		t.Fatal("unsupported AI response language did not fall back to Simplified Chinese")
+	}
+}
+
 func TestAIWebSearchRSSParsingAndSecretRedaction(t *testing.T) {
 	feed := []byte(`<?xml version="1.0"?><rss><channel><item><title>Result &amp; One</title><link>https://example.com/a</link><description><![CDATA[<b>Useful</b> text]]></description></item></channel></rss>`)
 	results, err := parseAIWebSearchRSS(feed)

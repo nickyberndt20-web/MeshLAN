@@ -93,7 +93,7 @@ func (a *clientApp) aiContext() map[string]any {
 }
 
 func (a *clientApp) requestAIPlan(prompt string) (AIPlan, error) {
-	return a.requestAIPlanWithConversation(prompt, nil, nil, nil)
+	return a.requestAIPlanWithConversation(prompt, nil, "zh-CN", nil, nil)
 }
 
 func partialAIReply(content string) string {
@@ -137,7 +137,7 @@ func partialAIReply(content string) string {
 	return ""
 }
 
-func (a *clientApp) requestAIPlanWithConversation(prompt string, conversation []AIConversationTurn, progress func(AIWorklogStep), onReplyDelta func(string)) (AIPlan, error) {
+func (a *clientApp) requestAIPlanWithConversation(prompt string, conversation []AIConversationTurn, language string, progress func(AIWorklogStep), onReplyDelta func(string)) (AIPlan, error) {
 	prompt = strings.TrimSpace(prompt)
 	if prompt == "" || len([]rune(prompt)) > 4000 {
 		return AIPlan{}, errors.New("AI请求不能为空且最多4000个字符")
@@ -172,7 +172,7 @@ func (a *clientApp) requestAIPlanWithConversation(prompt string, conversation []
 	if progress != nil {
 		progress(AIWorklogStep{Title: "采集实时状态", Detail: "节点、链路、映射、权限、证书和更新状态已读取。", Status: "done"})
 	}
-	plain := aiPlainRequest{Prompt: prompt, Context: realtimeContext, Conversation: safeConversation, ClientVersion: clientVersion}
+	plain := aiPlainRequest{Prompt: prompt, Context: realtimeContext, Conversation: safeConversation, ClientVersion: clientVersion, Language: normalizeAIResponseLanguage(language)}
 	plainBytes, _ := json.Marshal(plain)
 	if progress != nil {
 		progress(AIWorklogStep{Title: "安全检查与加密", Detail: "敏感信息扫描通过，正在使用 X25519 + AES-256-GCM 加密本轮上下文。", Status: "done"})

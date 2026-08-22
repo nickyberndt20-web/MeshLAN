@@ -72,7 +72,7 @@ func callAIProviderStream(settings AIProviderSettings, apiKey string, request ai
 		}
 	}
 	contextJSON, _ := json.Marshal(contextCopy)
-	messages := []map[string]any{{"role": "system", "content": aiSystemPrompt()}}
+	messages := []map[string]any{{"role": "system", "content": aiSystemPrompt(request.Language)}}
 	for _, turn := range request.Conversation {
 		if (turn.Role == "user" || turn.Role == "assistant") && strings.TrimSpace(turn.Content) != "" {
 			messages = append(messages, map[string]any{"role": turn.Role, "content": turn.Content})

@@ -22,6 +22,7 @@ type aiPlainRequest struct {
 	Context       map[string]any       `json:"context"`
 	Conversation  []AIConversationTurn `json:"conversation,omitempty"`
 	ClientVersion string               `json:"clientVersion"`
+	Language      string               `json:"language,omitempty"`
 }
 
 type aiPlanEnvelopeRequest struct {
@@ -136,11 +137,34 @@ func normalizeAIBaseURL(value string) (string, error) {
 	return strings.TrimRight(value, "/"), nil
 }
 
-func aiSystemPrompt() string {
+func normalizeAIResponseLanguage(value string) string {
+	switch strings.TrimSpace(value) {
+	case "zh-TW", "en", "ja":
+		return strings.TrimSpace(value)
+	default:
+		return "zh-CN"
+	}
+}
+
+func aiResponseLanguageInstruction(language string) string {
+	switch normalizeAIResponseLanguage(language) {
+	case "zh-TW":
+		return "所有面向使用者的 reply、summary、worklog detail、reason 與 unresolved 說明必須使用繁體中文；工具名稱與 JSON 欄位名稱保持原樣。"
+	case "en":
+		return "Write every user-facing reply, summary, worklog title/detail, reason, and unresolved explanation in English. Keep tool names and JSON field names unchanged."
+	case "ja":
+		return "ユーザー向けの reply、summary、worklog の title/detail、reason、unresolved の説明はすべて日本語で記述すること。ツール名と JSON フィールド名は変更しないこと。"
+	default:
+		return "所有面向用户的 reply、summary、worklog title/detail、reason 与 unresolved 说明必须使用简体中文；工具名称与 JSON 字段名保持原样。"
+	}
+}
+
+func aiSystemPrompt(language string) string {
 	return `你是MeshLAN服务端自动化Agent。只根据给定的实时上下文制定计划，不得编造状态。输出严格JSON对象：
 {"reply":"面向用户的最终回答","summary":"操作摘要","worklog":[{"title":"检查项","detail":"基于证据的简洁过程说明","status":"done"}],"unresolved":false,"actions":[{"id":"a1","tool":"工具名","arguments":{},"reason":"原因","risk":"low|medium|high","reversible":true}]}
 允许的工具：create_service_mapping,delete_service_mapping,pause_service_mapping,update_mapping_dns,request_access,respond_access,set_user_access,set_ip_mode,set_force_p2p,set_proxy_compatibility,set_interface_routing,set_network_automation,rename_network_scene,delete_network_scene,sync_lighthouses,apply_network_component,start_nebula,stop_nebula,run_p2p_diagnostic,install_https_root,uninstall_https_root,repair_identity,check_update,install_update,rollback_update,set_mesh_dns,set_dns_prefix,delete_file_share。
-所有修改都必须放入actions等待用户确认；不要输出Shell命令，不要请求或泄露密钥。证据不足时将unresolved设为true，不要猜测。若上下文包含联网检索结果，只能引用确实提供的来源并使用[S1]、[S2]格式标注。`
+所有修改都必须放入actions等待用户确认；不要输出Shell命令，不要请求或泄露密钥。证据不足时将unresolved设为true，不要猜测。若上下文包含联网检索结果，只能引用确实提供的来源并使用[S1]、[S2]格式标注。
+` + aiResponseLanguageInstruction(language)
 }
 
 func safeAIWebSearchQuery(prompt string) string {
@@ -283,7 +307,7 @@ func callAIProvider(settings AIProviderSettings, apiKey string, request aiPlainR
 		}
 	}
 	contextJSON, _ := json.Marshal(contextCopy)
-	messages := []map[string]any{{"role": "system", "content": aiSystemPrompt()}}
+	messages := []map[string]any{{"role": "system", "content": aiSystemPrompt(request.Language)}}
 	for _, turn := range request.Conversation {
 		if (turn.Role == "user" || turn.Role == "assistant") && strings.TrimSpace(turn.Content) != "" {
 			messages = append(messages, map[string]any{"role": turn.Role, "content": turn.Content})

@@ -856,6 +856,15 @@ func TestClientInterfaceSupportsPersistentFourLanguageSwitching(t *testing.T) {
 	if !strings.Contains(string(routes), "GET /assets/i18n.js") {
 		t.Fatal("i18n asset is not served by the native client")
 	}
+	assistant, err := clientWeb.ReadFile("web/ai-assistant.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{"meshLANI18n?.language", "prompt,language", "data-i18n-ignore"} {
+		if !strings.Contains(string(assistant), expected) {
+			t.Fatalf("AI assistant does not follow the selected interface language: missing %q", expected)
+		}
+	}
 }
 
 func TestNetworkAutomationDefaultsAndQualityScore(t *testing.T) {

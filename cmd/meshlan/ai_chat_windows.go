@@ -79,6 +79,7 @@ func (a *clientApp) registerAIConversationRoutes(mux *http.ServeMux) {
 		var input struct {
 			ConversationID string `json:"conversationId"`
 			Prompt         string `json:"prompt"`
+			Language       string `json:"language"`
 		}
 		if decodeRequest(r, &input) != nil || strings.TrimSpace(input.Prompt) == "" {
 			jsonReply(w, http.StatusBadRequest, map[string]string{"error": "消息不能为空"})
@@ -115,7 +116,7 @@ func (a *clientApp) registerAIConversationRoutes(mux *http.ServeMux) {
 		result := make(chan planResult, 1)
 		turns := aiConversationTurns(conversation)
 		go func() {
-			plan, planErr := a.requestAIPlanWithConversation(input.Prompt, turns, func(step AIWorklogStep) {
+			plan, planErr := a.requestAIPlanWithConversation(input.Prompt, turns, input.Language, func(step AIWorklogStep) {
 				select {
 				case progress <- step:
 				default:
