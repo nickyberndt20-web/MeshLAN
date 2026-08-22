@@ -56,13 +56,14 @@ $env:GOOS = 'linux'; $env:GOARCH = 'arm64'
 go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-arm64' .
 if ($LASTEXITCODE -ne 0) { throw 'Linux server build failed' }
 $env:GOARCH = 'amd64'
-go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-node-linux-amd64' .
-if ($LASTEXITCODE -ne 0) { throw 'Linux amd64 node build failed' }
+go build -trimpath -ldflags $serverLinkerFlags -o 'dist\meshlan-nebula-server-linux-amd64' .
+if ($LASTEXITCODE -ne 0) { throw 'Linux amd64 server build failed' }
 Copy-Item -Force 'dist\meshlan-nebula-server-linux-arm64' 'dist\meshlan-nebula-node-linux-arm64'
+Copy-Item -Force 'dist\meshlan-nebula-server-linux-amd64' 'dist\meshlan-nebula-node-linux-amd64'
 Copy-Item -Force 'deploy\install-mesh-node.sh' 'dist\install-mesh-node.sh'
 
 $versionedClient = "dist\MeshLAN-Nebula-Windows-$Version.exe"
-$hashes = Get-FileHash -Algorithm SHA256 'dist\meshlan-nebula-server-linux-arm64','dist\meshlan-nebula-node-linux-amd64','dist\meshlan-nebula-node-linux-arm64','dist\install-mesh-node.sh','dist\MeshLAN-Nebula-Windows.exe',$versionedClient
+$hashes = Get-FileHash -Algorithm SHA256 'dist\meshlan-nebula-server-linux-amd64','dist\meshlan-nebula-server-linux-arm64','dist\meshlan-nebula-node-linux-amd64','dist\meshlan-nebula-node-linux-arm64','dist\install-mesh-node.sh','dist\MeshLAN-Nebula-Windows.exe',$versionedClient
 $lines = $hashes | ForEach-Object { '{0}  {1}' -f $_.Hash,(Split-Path -Leaf $_.Path) }
 Set-Content -Encoding ascii -Path 'dist\SHA256SUMS.txt' -Value $lines
 $releaseMetadata = [ordered]@{

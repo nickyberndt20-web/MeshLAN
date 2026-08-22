@@ -229,6 +229,7 @@ cd MeshLAN
 
 ```text
 MeshLAN-Nebula-Windows.exe
+meshlan-nebula-server-linux-amd64
 meshlan-nebula-server-linux-arm64
 meshlan-nebula-node-linux-amd64
 meshlan-nebula-node-linux-arm64

@@ -42,6 +42,7 @@ jobs:
           name: meshlan-${{ github.sha }}
           path: |
             dist/MeshLAN-Nebula-Windows.exe
+            dist/meshlan-nebula-server-linux-amd64
             dist/meshlan-nebula-server-linux-arm64
             dist/meshlan-nebula-node-linux-amd64
             dist/meshlan-nebula-node-linux-arm64
