@@ -51,6 +51,7 @@ control plane and optional relay capacity.
 - **History and replay:** keep traffic, path, connection, and event history in local SQLite storage.
 - **AI assistant:** keep model credentials on the server and require confirmation before every mutation.
 - **Secure updates:** Ed25519 manifests, SHA-256 verification, health checks, and automatic rollback.
+- **Localized interface:** switch instantly among Simplified Chinese, Traditional Chinese, English, and Japanese; the choice persists locally.
 
 ## Turn remote devices into one LAN
 

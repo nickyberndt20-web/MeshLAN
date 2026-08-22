@@ -828,6 +828,36 @@ func TestSidebarVersionUsesProductFriendlyLabels(t *testing.T) {
 	}
 }
 
+func TestClientInterfaceSupportsPersistentFourLanguageSwitching(t *testing.T) {
+	indexHTML, err := clientWeb.ReadFile("web/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	i18n, err := clientWeb.ReadFile("web/i18n.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	indexSource := string(indexHTML)
+	for _, expected := range []string{"languageSelect", "setInterfaceLanguage", "zh-CN", "zh-TW", "English", "日本語", "/assets/i18n.js"} {
+		if !strings.Contains(indexSource, expected) {
+			t.Fatalf("language selector markup missing %q", expected)
+		}
+	}
+	i18nSource := string(i18n)
+	for _, expected := range []string{"meshlan.interfaceLanguage", "localStorage.setItem", "MutationObserver", "translateTree", "meshlan:languagechange", "Interface language", "表示言語", "介面語言"} {
+		if !strings.Contains(i18nSource, expected) {
+			t.Fatalf("i18n runtime missing %q", expected)
+		}
+	}
+	routes, err := os.ReadFile("client_windows.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(routes), "GET /assets/i18n.js") {
+		t.Fatal("i18n asset is not served by the native client")
+	}
+}
+
 func TestNetworkAutomationDefaultsAndQualityScore(t *testing.T) {
 	state := ClientState{}
 	if !applyNetworkAutomationDefaults(&state) || !state.AutoDualStack || !state.AutoNetworkScenes || state.NetworkAutomationVersion != networkAutomationVersion {
