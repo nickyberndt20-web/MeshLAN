@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-const updateSeedPort = 24444
-
 type updateSeedRuntime struct {
 	listener net.Listener
 	server   *http.Server

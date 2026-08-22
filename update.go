@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const updateSeedPort = 24444
+
 func fileSHA256(path string) (string, int64, error) {
 	file, err := os.Open(path)
 	if err != nil {
