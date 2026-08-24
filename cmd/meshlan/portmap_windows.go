@@ -204,6 +204,28 @@ func (a *clientApp) updateConnection(mappingID, serviceName, userName, address, 
 	_ = a.history.RecordConnection(snapshot)
 }
 
+func (a *clientApp) updateConnectionTokenUsage(mappingID, address string, allowed bool, usage serviceTokenUsage) {
+	if !usage.Reported {
+		return
+	}
+	key := mappingID + "|" + address + "|" + strconv.FormatBool(allowed)
+	a.connectionMu.Lock()
+	record := a.connections[key]
+	if record == nil {
+		a.connectionMu.Unlock()
+		return
+	}
+	record.InputTokens += usage.InputTokens
+	record.OutputTokens += usage.OutputTokens
+	record.TotalTokens += usage.TotalTokens
+	record.CachedTokens += usage.CachedTokens
+	record.ReasoningTokens += usage.ReasoningTokens
+	record.TokenUsageReports++
+	snapshot := *record
+	a.connectionMu.Unlock()
+	_ = a.history.RecordConnection(snapshot)
+}
+
 func (a *clientApp) connectionRecords(mappings []LocalServiceMapping) []ServiceConnectionRecord {
 	valid := make(map[string]bool, len(mappings))
 	for _, mapping := range mappings {

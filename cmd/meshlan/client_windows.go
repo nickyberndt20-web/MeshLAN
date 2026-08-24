@@ -933,6 +933,16 @@ func (a *clientApp) routes() http.Handler {
 		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write(data)
 	})
+	mux.HandleFunc("GET /assets/token-usage.js", func(w http.ResponseWriter, _ *http.Request) {
+		data, err := clientWeb.ReadFile("web/token-usage.js")
+		if err != nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, _ = w.Write(data)
+	})
 	mux.HandleFunc("GET /api/state", func(w http.ResponseWriter, _ *http.Request) {
 		state, _ := a.load()
 		exists, running := nebulaServiceState()

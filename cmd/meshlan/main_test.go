@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"database/sql"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
@@ -673,7 +674,7 @@ func TestSQLiteHistoryPersistsTopologyTrafficAndConnections(t *testing.T) {
 	if err := store.RecordTopology(snapshot); err != nil {
 		t.Fatal(err)
 	}
-	connection := ServiceConnectionRecord{MappingID: "mapping-a", ServiceName: "API", UserName: "peer-a", Address: "10.77.0.3", Protocol: "tcp", Allowed: true, Active: 9, FirstSeen: now, LastSeen: now, BytesToLocal: 400, BytesToPeer: 200}
+	connection := ServiceConnectionRecord{MappingID: "mapping-a", ServiceName: "API", UserName: "peer-a", Address: "10.77.0.3", Protocol: "http", Allowed: true, Active: 9, FirstSeen: now, LastSeen: now, BytesToLocal: 400, BytesToPeer: 200, InputTokens: 120, OutputTokens: 30, TotalTokens: 150, CachedTokens: 80, ReasoningTokens: 10, TokenUsageReports: 1}
 	if err := store.RecordConnection(connection); err != nil {
 		t.Fatal(err)
 	}
@@ -697,6 +698,77 @@ func TestSQLiteHistoryPersistsTopologyTrafficAndConnections(t *testing.T) {
 	}
 	if history.Connections[0].Active != 0 {
 		t.Fatalf("process-local active connection count survived history reopen: %#v", history.Connections[0])
+	}
+	if history.Connections[0].TotalTokens != 150 || history.Connections[0].CachedTokens != 80 || history.Connections[0].ReasoningTokens != 10 || history.Connections[0].TokenUsageReports != 1 {
+		t.Fatalf("token usage did not persist across history reopen: %#v", history.Connections[0])
+	}
+}
+
+func TestTokenUsageCounterParsesOpenAIAndResponsesUsage(t *testing.T) {
+	chat := &tokenUsageCounter{}
+	chat.Observe([]byte("data: {\"choices\":[],\"usage\":{\"prompt_tokens\":120,\"completion_tokens\":30,"))
+	chat.Observe([]byte("\"total_tokens\":150,\"prompt_tokens_details\":{\"cached_tokens\":80},\"completion_tokens_details\":{\"reasoning_tokens\":10}}}\n\ndata: [DONE]\n\n"))
+	usage := chat.Result()
+	if !usage.Reported || usage.InputTokens != 120 || usage.OutputTokens != 30 || usage.TotalTokens != 150 || usage.CachedTokens != 80 || usage.ReasoningTokens != 10 {
+		t.Fatalf("unexpected chat usage: %#v", usage)
+	}
+
+	responses := &tokenUsageCounter{}
+	responses.Observe([]byte(`{"type":"response.completed","response":{"usage":{"input_tokens":44,"output_tokens":11,"total_tokens":55,"input_tokens_details":{"cached_tokens":20},"output_tokens_details":{"reasoning_tokens":7}}}}`))
+	usage = responses.Result()
+	if !usage.Reported || usage.InputTokens != 44 || usage.OutputTokens != 11 || usage.TotalTokens != 55 || usage.CachedTokens != 20 || usage.ReasoningTokens != 7 {
+		t.Fatalf("unexpected responses usage: %#v", usage)
+	}
+	if !tracksTokenUsage("/v1/chat/completions") || !tracksTokenUsage("/v1/responses") || !tracksTokenUsage("/v1/messages") || tracksTokenUsage("/health") {
+		t.Fatal("token usage path classification failed")
+	}
+}
+
+func TestHistoryMigratesLegacyConnectionTokenColumns(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "history.sqlite")
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(`CREATE TABLE connection_summary (
+		mapping_id TEXT NOT NULL, service_name TEXT NOT NULL, user_name TEXT NOT NULL,
+		address TEXT NOT NULL, protocol TEXT NOT NULL, allowed INTEGER NOT NULL, active INTEGER NOT NULL,
+		first_seen_ms INTEGER NOT NULL, last_seen_ms INTEGER NOT NULL,
+		bytes_to_local INTEGER NOT NULL, bytes_to_peer INTEGER NOT NULL,
+		PRIMARY KEY(mapping_id,address,allowed)
+	)`)
+	if err != nil {
+		db.Close()
+		t.Fatal(err)
+	}
+	db.Close()
+	store, err := openHistoryStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+	required := map[string]bool{"input_tokens": false, "output_tokens": false, "total_tokens": false, "cached_tokens": false, "reasoning_tokens": false, "token_usage_reports": false}
+	rows, err := store.db.Query(`PRAGMA table_info(connection_summary)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, columnType string
+		var defaultValue any
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			rows.Close()
+			t.Fatal(err)
+		}
+		if _, ok := required[name]; ok {
+			required[name] = true
+		}
+	}
+	rows.Close()
+	for name, found := range required {
+		if !found {
+			t.Fatalf("legacy history migration did not add %s", name)
+		}
 	}
 }
 

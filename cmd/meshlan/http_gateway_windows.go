@@ -61,12 +61,16 @@ func (c *countingReadCloser) Read(buffer []byte) (int, error) {
 
 type countingResponseWriter struct {
 	http.ResponseWriter
-	bytes uint64
+	bytes      uint64
+	tokenUsage *tokenUsageCounter
 }
 
 func (w *countingResponseWriter) Write(data []byte) (int, error) {
 	count, err := w.ResponseWriter.Write(data)
 	w.bytes += uint64(count)
+	if w.tokenUsage != nil && count > 0 {
+		w.tokenUsage.Observe(data[:count])
+	}
 	return count, err
 }
 
@@ -149,13 +153,20 @@ func (a *clientApp) httpGatewayHandler(w http.ResponseWriter, r *http.Request) {
 	originalHost := r.Host
 	requestBody := &countingReadCloser{httpReadCloser: r.Body}
 	r.Body = requestBody
-	responseWriter := &countingResponseWriter{ResponseWriter: w}
+	var usageCounter *tokenUsageCounter
+	if tracksTokenUsage(r.URL.Path) {
+		usageCounter = &tokenUsageCounter{}
+	}
+	responseWriter := &countingResponseWriter{ResponseWriter: w, tokenUsage: usageCounter}
 	proxy := httputil.NewSingleHostReverseProxy(target)
 	defaultDirector := proxy.Director
 	proxy.Director = func(request *http.Request) {
 		defaultDirector(request)
 		request.Header.Set("X-Forwarded-Host", originalHost)
 		request.Header.Set("X-MeshLAN-Service-Domain", host)
+		if usageCounter != nil {
+			request.Header.Set("Accept-Encoding", "identity")
+		}
 		request.Host = target.Host
 	}
 	proxy.FlushInterval = -1
@@ -165,6 +176,9 @@ func (a *clientApp) httpGatewayHandler(w http.ResponseWriter, r *http.Request) {
 	a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, 1, 0, 0)
 	defer func() {
 		a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, -1, requestBody.bytes, responseWriter.bytes)
+		if usage := usageCounter.Result(); usage.Reported {
+			a.updateConnectionTokenUsage(mapping.ID, remoteHost, true, usage)
+		}
 	}()
 	proxy.ServeHTTP(responseWriter, r)
 }

@@ -109,6 +109,9 @@ func openHistoryStore(path string) (*historyStore, error) {
 			address TEXT NOT NULL, protocol TEXT NOT NULL, allowed INTEGER NOT NULL, active INTEGER NOT NULL,
 			first_seen_ms INTEGER NOT NULL, last_seen_ms INTEGER NOT NULL,
 			bytes_to_local INTEGER NOT NULL, bytes_to_peer INTEGER NOT NULL,
+			input_tokens INTEGER NOT NULL DEFAULT 0, output_tokens INTEGER NOT NULL DEFAULT 0,
+			total_tokens INTEGER NOT NULL DEFAULT 0, cached_tokens INTEGER NOT NULL DEFAULT 0,
+			reasoning_tokens INTEGER NOT NULL DEFAULT 0, token_usage_reports INTEGER NOT NULL DEFAULT 0,
 			PRIMARY KEY(mapping_id,address,allowed)
 		)`,
 		`CREATE TABLE IF NOT EXISTS history_events (
@@ -132,6 +135,22 @@ func openHistoryStore(path string) (*historyStore, error) {
 			return nil, fmt.Errorf("初始化历史数据库失败: %w", err)
 		}
 	}
+	for _, column := range []struct {
+		name       string
+		definition string
+	}{
+		{"input_tokens", "INTEGER NOT NULL DEFAULT 0"},
+		{"output_tokens", "INTEGER NOT NULL DEFAULT 0"},
+		{"total_tokens", "INTEGER NOT NULL DEFAULT 0"},
+		{"cached_tokens", "INTEGER NOT NULL DEFAULT 0"},
+		{"reasoning_tokens", "INTEGER NOT NULL DEFAULT 0"},
+		{"token_usage_reports", "INTEGER NOT NULL DEFAULT 0"},
+	} {
+		if err := ensureHistoryColumn(db, "connection_summary", column.name, column.definition); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("升级历史数据库失败: %w", err)
+		}
+	}
 	// Active connections are process-local and cannot survive a client restart.
 	// Reset stale values left by an interrupted reverse-proxy request or shutdown.
 	if _, err := db.Exec(`UPDATE connection_summary SET active=0 WHERE active<>0`); err != nil {
@@ -140,6 +159,34 @@ func openHistoryStore(path string) (*historyStore, error) {
 	}
 	_ = os.Chmod(path, 0o600)
 	return store, nil
+}
+
+func ensureHistoryColumn(db *sql.DB, table, name, definition string) error {
+	rows, err := db.Query("PRAGMA table_info(" + table + ")")
+	if err != nil {
+		return err
+	}
+	found := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var columnName, columnType string
+		var defaultValue any
+		if err := rows.Scan(&cid, &columnName, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			rows.Close()
+			return err
+		}
+		if columnName == name {
+			found = true
+		}
+	}
+	if err := rows.Close(); err != nil {
+		return err
+	}
+	if found {
+		return nil
+	}
+	_, err = db.Exec("ALTER TABLE " + table + " ADD COLUMN " + name + " " + definition)
+	return err
 }
 
 func (s *historyStore) Close() error {
@@ -204,11 +251,12 @@ func (s *historyStore) RecordConnection(record ServiceConnectionRecord) error {
 	if s == nil {
 		return nil
 	}
-	_, err := s.db.Exec(`INSERT INTO connection_summary(mapping_id,service_name,user_name,address,protocol,allowed,active,first_seen_ms,last_seen_ms,bytes_to_local,bytes_to_peer)
-		VALUES(?,?,?,?,?,?,?,?,?,?,?)
-		ON CONFLICT(mapping_id,address,allowed) DO UPDATE SET service_name=excluded.service_name,user_name=excluded.user_name,protocol=excluded.protocol,active=excluded.active,last_seen_ms=excluded.last_seen_ms,bytes_to_local=excluded.bytes_to_local,bytes_to_peer=excluded.bytes_to_peer`,
+	_, err := s.db.Exec(`INSERT INTO connection_summary(mapping_id,service_name,user_name,address,protocol,allowed,active,first_seen_ms,last_seen_ms,bytes_to_local,bytes_to_peer,input_tokens,output_tokens,total_tokens,cached_tokens,reasoning_tokens,token_usage_reports)
+		VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+		ON CONFLICT(mapping_id,address,allowed) DO UPDATE SET service_name=excluded.service_name,user_name=excluded.user_name,protocol=excluded.protocol,active=excluded.active,last_seen_ms=excluded.last_seen_ms,bytes_to_local=excluded.bytes_to_local,bytes_to_peer=excluded.bytes_to_peer,input_tokens=excluded.input_tokens,output_tokens=excluded.output_tokens,total_tokens=excluded.total_tokens,cached_tokens=excluded.cached_tokens,reasoning_tokens=excluded.reasoning_tokens,token_usage_reports=excluded.token_usage_reports`,
 		record.MappingID, record.ServiceName, record.UserName, record.Address, record.Protocol, record.Allowed, record.Active,
-		unixMillis(record.FirstSeen), unixMillis(record.LastSeen), record.BytesToLocal, record.BytesToPeer)
+		unixMillis(record.FirstSeen), unixMillis(record.LastSeen), record.BytesToLocal, record.BytesToPeer,
+		record.InputTokens, record.OutputTokens, record.TotalTokens, record.CachedTokens, record.ReasoningTokens, record.TokenUsageReports)
 	return err
 }
 
@@ -283,14 +331,14 @@ func (s *historyStore) ClientHistory(hours int) (ClientHistoryResponse, error) {
 		result.Peers = append(result.Peers, point)
 	}
 	rows.Close()
-	rows, err = s.db.Query(`SELECT mapping_id,service_name,user_name,address,protocol,allowed,active,first_seen_ms,last_seen_ms,bytes_to_local,bytes_to_peer FROM connection_summary ORDER BY last_seen_ms DESC LIMIT 1000`)
+	rows, err = s.db.Query(`SELECT mapping_id,service_name,user_name,address,protocol,allowed,active,first_seen_ms,last_seen_ms,bytes_to_local,bytes_to_peer,input_tokens,output_tokens,total_tokens,cached_tokens,reasoning_tokens,token_usage_reports FROM connection_summary ORDER BY last_seen_ms DESC LIMIT 1000`)
 	if err != nil {
 		return result, err
 	}
 	for rows.Next() {
 		var first, last int64
 		var record ServiceConnectionRecord
-		if err := rows.Scan(&record.MappingID, &record.ServiceName, &record.UserName, &record.Address, &record.Protocol, &record.Allowed, &record.Active, &first, &last, &record.BytesToLocal, &record.BytesToPeer); err != nil {
+		if err := rows.Scan(&record.MappingID, &record.ServiceName, &record.UserName, &record.Address, &record.Protocol, &record.Allowed, &record.Active, &first, &last, &record.BytesToLocal, &record.BytesToPeer, &record.InputTokens, &record.OutputTokens, &record.TotalTokens, &record.CachedTokens, &record.ReasoningTokens, &record.TokenUsageReports); err != nil {
 			rows.Close()
 			return result, err
 		}

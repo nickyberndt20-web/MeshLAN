@@ -405,17 +405,23 @@ type LocalServiceMapping struct {
 }
 
 type ServiceConnectionRecord struct {
-	MappingID    string    `json:"mappingId"`
-	ServiceName  string    `json:"serviceName"`
-	UserName     string    `json:"userName"`
-	Address      string    `json:"address"`
-	Protocol     string    `json:"protocol"`
-	Allowed      bool      `json:"allowed"`
-	Active       int       `json:"active"`
-	FirstSeen    time.Time `json:"firstSeen"`
-	LastSeen     time.Time `json:"lastSeen"`
-	BytesToLocal uint64    `json:"bytesToLocal"`
-	BytesToPeer  uint64    `json:"bytesToPeer"`
+	MappingID         string    `json:"mappingId"`
+	ServiceName       string    `json:"serviceName"`
+	UserName          string    `json:"userName"`
+	Address           string    `json:"address"`
+	Protocol          string    `json:"protocol"`
+	Allowed           bool      `json:"allowed"`
+	Active            int       `json:"active"`
+	FirstSeen         time.Time `json:"firstSeen"`
+	LastSeen          time.Time `json:"lastSeen"`
+	BytesToLocal      uint64    `json:"bytesToLocal"`
+	BytesToPeer       uint64    `json:"bytesToPeer"`
+	InputTokens       uint64    `json:"inputTokens,omitempty"`
+	OutputTokens      uint64    `json:"outputTokens,omitempty"`
+	TotalTokens       uint64    `json:"totalTokens,omitempty"`
+	CachedTokens      uint64    `json:"cachedTokens,omitempty"`
+	ReasoningTokens   uint64    `json:"reasoningTokens,omitempty"`
+	TokenUsageReports uint64    `json:"tokenUsageReports,omitempty"`
 }
 
 type ServiceMappingHeartbeat struct {

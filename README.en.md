@@ -48,6 +48,7 @@ control plane and optional relay capacity.
 - **HTTPS gateway:** issue local certificates for `.mesh` HTTP services and provide portless access.
 - **Direct file transfer:** file contents travel through the encrypted device-to-device path.
 - **Live observability:** inspect topology, P2P/Relay paths, underlay, latency, traffic, and service health.
+- **Per-user token accounting:** accumulate input, output, cached, and reasoning tokens from reported model `usage` without reading conversation content.
 - **History and replay:** keep traffic, path, connection, and event history in local SQLite storage.
 - **AI assistant:** keep model credentials on the server and require confirmation before every mutation.
 - **Secure updates:** Ed25519 manifests, SHA-256 verification, health checks, and automatic rollback.

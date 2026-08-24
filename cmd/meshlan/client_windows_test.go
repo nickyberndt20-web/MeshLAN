@@ -913,6 +913,35 @@ func TestTrafficRoutingLivesInDocumentedCollapsedAdvancedSettings(t *testing.T) 
 	}
 }
 
+func TestPerUserTokenUsagePanelExplainsCoverageAndPrivacy(t *testing.T) {
+	indexHTML, err := clientWeb.ReadFile("web/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script, err := clientWeb.ReadFile("web/token-usage.js")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(indexHTML), "/assets/token-usage.js") {
+		t.Fatal("token usage runtime is not loaded by the native client")
+	}
+	for _, expected := range []string{
+		"用户 Token 用量", "不会读取或保存对话正文", "无法准确换算为 Token", "inputTokens", "outputTokens",
+		"totalTokens", "cachedTokens", "reasoningTokens", "tokenUsageReports", "未统计 · 透明 TCP/UDP",
+	} {
+		if !strings.Contains(string(script), expected) {
+			t.Fatalf("token usage UI missing %q", expected)
+		}
+	}
+	routes, err := os.ReadFile("client_windows.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(routes), "GET /assets/token-usage.js") {
+		t.Fatal("token usage asset is not served by the native client")
+	}
+}
+
 func TestNetworkAutomationDefaultsAndQualityScore(t *testing.T) {
 	state := ClientState{}
 	if !applyNetworkAutomationDefaults(&state) || !state.AutoDualStack || !state.AutoNetworkScenes || state.NetworkAutomationVersion != networkAutomationVersion {
