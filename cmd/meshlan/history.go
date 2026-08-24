@@ -132,6 +132,12 @@ func openHistoryStore(path string) (*historyStore, error) {
 			return nil, fmt.Errorf("初始化历史数据库失败: %w", err)
 		}
 	}
+	// Active connections are process-local and cannot survive a client restart.
+	// Reset stale values left by an interrupted reverse-proxy request or shutdown.
+	if _, err := db.Exec(`UPDATE connection_summary SET active=0 WHERE active<>0`); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("重置历史连接状态失败: %w", err)
+	}
 	_ = os.Chmod(path, 0o600)
 	return store, nil
 }

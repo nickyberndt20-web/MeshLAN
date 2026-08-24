@@ -445,6 +445,21 @@ func TestConnectionRecordsPruneDeletedMappings(t *testing.T) {
 	}
 }
 
+func TestHTTPGatewayDefersActiveConnectionCleanup(t *testing.T) {
+	sourceBytes, err := os.ReadFile("http_gateway_windows.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	source := string(sourceBytes)
+	increment := strings.Index(source, `a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, 1, 0, 0)`)
+	deferred := strings.Index(source, "defer func()")
+	serve := strings.Index(source, "proxy.ServeHTTP(responseWriter, r)")
+	decrement := strings.Index(source, `a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, -1, requestBody.bytes, responseWriter.bytes)`)
+	if increment < 0 || deferred < increment || decrement < deferred || serve < decrement {
+		t.Fatalf("HTTP gateway active cleanup is not deferred across reverse-proxy aborts: increment=%d defer=%d decrement=%d serve=%d", increment, deferred, decrement, serve)
+	}
+}
+
 func TestParseSTUNXORMappedIPv4(t *testing.T) {
 	var transaction [12]byte
 	for i := range transaction {

@@ -163,8 +163,10 @@ func (a *clientApp) httpGatewayHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(writer, "MeshLAN local service unavailable: "+proxyErr.Error(), http.StatusBadGateway)
 	}
 	a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, 1, 0, 0)
+	defer func() {
+		a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, -1, requestBody.bytes, responseWriter.bytes)
+	}()
 	proxy.ServeHTTP(responseWriter, r)
-	a.updateConnection(mapping.ID, mapping.ServiceName, userName, remoteHost, "http", true, -1, requestBody.bytes, responseWriter.bytes)
 }
 
 func (a *clientApp) httpsGatewayActive() bool {

@@ -673,7 +673,7 @@ func TestSQLiteHistoryPersistsTopologyTrafficAndConnections(t *testing.T) {
 	if err := store.RecordTopology(snapshot); err != nil {
 		t.Fatal(err)
 	}
-	connection := ServiceConnectionRecord{MappingID: "mapping-a", ServiceName: "API", UserName: "peer-a", Address: "10.77.0.3", Protocol: "tcp", Allowed: true, FirstSeen: now, LastSeen: now, BytesToLocal: 400, BytesToPeer: 200}
+	connection := ServiceConnectionRecord{MappingID: "mapping-a", ServiceName: "API", UserName: "peer-a", Address: "10.77.0.3", Protocol: "tcp", Allowed: true, Active: 9, FirstSeen: now, LastSeen: now, BytesToLocal: 400, BytesToPeer: 200}
 	if err := store.RecordConnection(connection); err != nil {
 		t.Fatal(err)
 	}
@@ -694,6 +694,9 @@ func TestSQLiteHistoryPersistsTopologyTrafficAndConnections(t *testing.T) {
 	}
 	if len(history.Local) != 1 || history.Local[0].BytesReceived != 1200 || len(history.Peers) != 1 || history.Peers[0].PathMode != "p2p" || len(history.Connections) != 1 || history.Connections[0].BytesToLocal != 400 || len(history.Events) != 1 {
 		t.Fatalf("history did not persist: %#v", history)
+	}
+	if history.Connections[0].Active != 0 {
+		t.Fatalf("process-local active connection count survived history reopen: %#v", history.Connections[0])
 	}
 }
 
