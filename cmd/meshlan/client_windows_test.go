@@ -926,12 +926,15 @@ func TestPerUserTokenUsagePanelExplainsCoverageAndPrivacy(t *testing.T) {
 		t.Fatal("token usage runtime is not loaded by the native client")
 	}
 	for _, expected := range []string{
-		"用户 Token 用量", "不会读取或保存对话正文", "无法准确换算为 Token", "inputTokens", "outputTokens",
+		"navTokens", "tokenPage", "Token 用量统计", "模型输入 Token", "模型输出 Token", "不会读取或保存对话正文", "无法准确换算为 Token", "inputTokens", "outputTokens",
 		"totalTokens", "cachedTokens", "reasoningTokens", "tokenUsageReports", "未统计 · 透明 TCP/UDP",
 	} {
 		if !strings.Contains(string(script), expected) {
 			t.Fatalf("token usage UI missing %q", expected)
 		}
+	}
+	if !strings.Contains(string(script), "tokenPage.appendChild(panel)") || strings.Contains(string(script), "connectionPanel.insertAdjacentElement") {
+		t.Fatal("token usage panel is not isolated on its own page")
 	}
 	routes, err := os.ReadFile("client_windows.go")
 	if err != nil {

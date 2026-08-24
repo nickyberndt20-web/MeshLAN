@@ -2,39 +2,50 @@
   'use strict';
 
   const mappingsPage = document.getElementById('mappingsPage');
-  const connectionRows = document.getElementById('connectionRows');
-  const connectionPanel = connectionRows?.closest('section.panel');
-  if (!mappingsPage || !connectionPanel || document.getElementById('tokenUsagePanel')) return;
+  const mappingsNav = document.getElementById('navMappings');
+  if (!mappingsPage || !mappingsNav || document.getElementById('tokenPage')) return;
+
+  const nav = document.createElement('button');
+  nav.id = 'navTokens';
+  nav.className = 'nav';
+  nav.textContent = 'Token 用量';
+  nav.onclick = () => window.showPage('tokens');
+  mappingsNav.insertAdjacentElement('afterend', nav);
+
+  const tokenPage = document.createElement('div');
+  tokenPage.id = 'tokenPage';
+  tokenPage.className = 'hidden';
+  mappingsPage.insertAdjacentElement('afterend', tokenPage);
 
   const panel = document.createElement('section');
   panel.id = 'tokenUsagePanel';
   panel.className = 'panel';
   panel.innerHTML = `
     <div class="head">
-      <h2>用户 Token 用量</h2>
+      <h2>Token 用量统计</h2>
       <span id="tokenUsageUpdated" class="quiet">从启用统计功能后开始累计</span>
     </div>
     <div class="body">
       <div class="notice">
         <strong>这里显示模型在响应中报告的真实 usage，不会读取或保存对话正文。</strong><br>
-        过去只有流量字节，无法准确换算为 Token，因此不会伪造历史数字。通过 HTTP/HTTPS 域名入口访问且上游返回 usage 的请求可以精确统计；TCP/UDP 透明转发无法识别模型响应，会显示“未统计”。
+        模型输入 Token 是发送给模型的提示词、历史和工具上下文；模型输出 Token 是模型生成的回复，缓存 Token 属于输入的一部分。过去只有流量字节，无法准确换算为 Token，因此不会伪造历史数字。通过 HTTP/HTTPS 域名入口访问且上游返回 usage 的请求可以精确统计；TCP/UDP 透明转发无法识别模型响应，会显示“未统计”。
       </div>
       <div class="token-leaderboard-head"><h3>Token 使用排行榜</h3><span class="quiet">显示全部用户 · 有真实 usage 的按总 Token 排名</span></div>
       <div id="tokenLeaderboard" class="token-leaderboard"><div class="quiet">等待足够的 usage 数据</div></div>
       <div class="topology-summary">
-        <div class="topology-stat"><span>已统计输入</span><strong id="tokenInputTotal">0</strong></div>
-        <div class="topology-stat"><span>已统计输出</span><strong id="tokenOutputTotal">0</strong></div>
+        <div class="topology-stat"><span>模型输入（上下文）</span><strong id="tokenInputTotal">0</strong></div>
+        <div class="topology-stat"><span>模型输出（回复）</span><strong id="tokenOutputTotal">0</strong></div>
         <div class="topology-stat"><span>已统计总量</span><strong id="tokenGrandTotal">0</strong></div>
         <div class="topology-stat"><span>Usage 报告数</span><strong id="tokenReportTotal">0</strong></div>
       </div>
       <div class="table-wrap" style="margin-top:14px">
         <table class="peer-table">
-          <thead><tr><th>排名</th><th>用户</th><th>设备 IP</th><th>输入 Token</th><th>输出 Token</th><th>总 Token</th><th>缓存 Token</th><th>推理 Token</th><th>已统计请求</th><th>最近活动</th><th>统计状态</th></tr></thead>
+          <thead><tr><th>排名</th><th>用户</th><th>设备 IP</th><th>模型输入 Token</th><th>模型输出 Token</th><th>总 Token</th><th>缓存 Token</th><th>推理 Token</th><th>已统计请求</th><th>最近活动</th><th>统计状态</th></tr></thead>
           <tbody id="tokenUsageRows"><tr><td colspan="11">等待新的 usage 数据</td></tr></tbody>
         </table>
       </div>
     </div>`;
-  connectionPanel.insertAdjacentElement('afterend', panel);
+  tokenPage.appendChild(panel);
 
   if (!document.getElementById('tokenUsageStyles')) {
     const style = document.createElement('style');
@@ -44,6 +55,8 @@
   }
 
   const ui = {
+    refreshButton: document.getElementById('refreshButton'),
+    liveState: document.getElementById('liveState'),
     rows: document.getElementById('tokenUsageRows'),
     leaderboard: document.getElementById('tokenLeaderboard'),
     updated: document.getElementById('tokenUsageUpdated'),
@@ -104,7 +117,7 @@
       const rankClass = position > 0 && position <= 3 ? `rank-${position}` : (position ? '' : 'untracked');
       const total = position ? `${formatTokens(user.total)} Token` : '未统计';
       const meta = position
-        ? `输入 ${formatTokens(user.input)} · 输出 ${formatTokens(user.output)} · ${formatTokens(user.reports)} 次请求`
+        ? `模型输入 ${formatTokens(user.input)} · 模型输出 ${formatTokens(user.output)} · ${formatTokens(user.reports)} 次请求`
         : '没有真实 usage · 不参与排名';
       return `<div class="token-rank-card ${rankClass}">
       <span class="token-rank-number">${position || '—'}</span>
@@ -139,7 +152,7 @@
       </tr>`).join('') || '<tr><td colspan="11">暂无用户连接记录</td></tr>';
       ui.updated.textContent = `更新于 ${new Date().toLocaleTimeString()} · 仅累计已报告 usage 的请求`;
     } catch (error) {
-      ui.rows.innerHTML = `<tr><td colspan="10">${esc(error.message)}</td></tr>`;
+      ui.rows.innerHTML = `<tr><td colspan="11">${esc(error.message)}</td></tr>`;
       ui.updated.textContent = 'Token 用量读取失败';
     }
   }
@@ -147,13 +160,40 @@
   window.refreshTokenUsage = refreshTokenUsage;
   const previousShowPage = window.showPage;
   window.showPage = function(name) {
+    if (name === 'tokens') {
+      previousShowPage('mappings');
+      currentPage = 'tokens';
+      mappingsPage.classList.add('hidden');
+      tokenPage.classList.remove('hidden');
+      mappingsNav.classList.remove('active');
+      nav.classList.add('active');
+      document.getElementById('pageTitle').textContent = 'Token 用量';
+      refreshTokenUsage();
+      return;
+    }
+    tokenPage.classList.add('hidden');
+    nav.classList.remove('active');
     previousShowPage(name);
-    if (name === 'mappings') refreshTokenUsage();
+  };
+  const previousRefreshCurrent = window.refreshCurrent;
+  window.refreshCurrent = async function(showFeedback = false) {
+    if (typeof currentPage !== 'undefined' && currentPage === 'tokens') {
+      if (showFeedback) setButtonLoading(ui.refreshButton, '刷新中...');
+      await refreshTokenUsage();
+      ui.liveState.classList.remove('error');
+      ui.liveState.textContent = '实时同步 · ' + new Date().toLocaleTimeString();
+      if (showFeedback) {
+        unsetButtonLoading(ui.refreshButton);
+        showToast('Token 排行榜已刷新', 'success', 1500);
+      }
+      return;
+    }
+    return previousRefreshCurrent(showFeedback);
   };
   document.addEventListener('meshlan:languagechange', () => {
-    if (typeof currentPage !== 'undefined' && currentPage === 'mappings') refreshTokenUsage();
+    if (typeof currentPage !== 'undefined' && currentPage === 'tokens') refreshTokenUsage();
   });
   setInterval(() => {
-    if (!document.hidden && typeof currentPage !== 'undefined' && currentPage === 'mappings') refreshTokenUsage();
+    if (!document.hidden && typeof currentPage !== 'undefined' && currentPage === 'tokens') refreshTokenUsage();
   }, 10000);
 })();
